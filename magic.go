@@ -39,7 +39,7 @@ func convert(from, to reflect.Value, converters ...Converter) error {
 	// Ptr to Type
 	if isPtrOf(from, to) {
 		if from.IsNil() {
-			from.Set(reflect.New(from.Type()).Elem())
+			return nil
 		}
 		return convert(from.Elem(), to.Elem(), converters...)
 	}
