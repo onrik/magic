@@ -33,7 +33,7 @@ func convert(from, to reflect.Value, converters ...Converter) error {
 		if to.IsNil() {
 			to.Set(reflect.New(to.Type().Elem()))
 		}
-		return convert(from, to.Elem())
+		return convert(from, to.Elem(), converters...)
 	}
 
 	// Ptr to Type
@@ -41,30 +41,30 @@ func convert(from, to reflect.Value, converters ...Converter) error {
 		if from.IsNil() {
 			from.Set(reflect.New(from.Type()).Elem())
 		}
-		return convert(from.Elem(), to.Elem())
+		return convert(from.Elem(), to.Elem(), converters...)
 	}
 
 	// Different structs
 	if from.Type().Kind() == reflect.Struct && to.Type().Kind() == reflect.Struct {
-		return convertStruct(from, to)
+		return convertStruct(from, to, converters...)
 	}
 
 	if from.Type().Kind() == reflect.Struct && isPtrOfStruct(to) {
 		if to.IsNil() {
 			to.Set(reflect.New(to.Type().Elem()))
 		}
-		return convertStruct(from, to.Elem())
+		return convertStruct(from, to.Elem(), converters...)
 	}
 
 	if to.Type().Kind() == reflect.Struct && isPtrOfStruct(from) {
 		if from.IsNil() {
 			from.Set(reflect.New(from.Type()).Elem())
 		}
-		return convertStruct(from.Elem(), to)
+		return convertStruct(from.Elem(), to, converters...)
 	}
 
 	if from.Type().Kind() == reflect.Slice && to.Type().Kind() == reflect.Slice {
-		return convertSlice(from, to)
+		return convertSlice(from, to, converters...)
 	}
 
 	for _, c := range converters {
