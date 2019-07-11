@@ -110,7 +110,7 @@ func TestMapPointersSlice(t *testing.T) {
 	assert(t, t2[0].Tags[0], t1[0].Tags[0])
 
 	t2 = []*testType2{
-		&testType2{43, "John", time.Now(), []string{"2"}},
+		{43, "John", time.Now(), []string{"2"}},
 	}
 	t1 = []testType1{}
 	err = Map(t2, &t1)
