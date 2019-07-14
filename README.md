@@ -4,7 +4,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/onrik/magic)](https://goreportcard.com/report/github.com/onrik/magic)
 [![GoDoc](https://godoc.org/github.com/onrik/magic?status.svg)](https://godoc.org/github.com/onrik/magic)
 
-## Magic converter for differect structs
+## Magic converter for different structs
 By default:
 1. Map same types with same names
 1. Map slices with same types 
