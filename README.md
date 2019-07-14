@@ -15,7 +15,8 @@ By options:
 1. Custom converters for different types
 1. Custom mapping for different fields names
 
-Examples:
+## Examples
+### Simple
 ```go
 package main
 
@@ -48,6 +49,111 @@ func main() {
 	user2 := User2{}
 
 	err := magic.Map(user1, &user2)
+	fmt.Println(err)
+	fmt.Printf("%+v\n", user2)
+}
+```
+
+### Custom converter
+```go
+package main
+
+import (
+	"fmt"
+	"reflect"
+
+	"time"
+
+	"github.com/onrik/magic"
+)
+
+func timeToUnix(from, to reflect.Value) (bool, error) {
+	t, ok := from.Interface().(time.Time)
+	if !ok {
+		fmt.Println(from.Type())
+		return false, nil
+	}
+
+	_, ok = to.Interface().(int64)
+	if !ok {
+		fmt.Println(to.Type())
+		return false, nil
+	}
+
+	to.SetInt(t.Unix())
+
+	return true, nil
+}
+
+type User1 struct {
+	ID       int
+	Name     string
+	Password string
+	Age      int
+	Created  time.Time
+}
+
+type User2 struct {
+	ID      int
+	Name    string
+	Created int64
+}
+
+func main() {
+	user1 := User1{
+		ID:       1,
+		Name:     "John",
+		Password: "111",
+		Age:      21,
+		Created:  time.Now(),
+	}
+	user2 := User2{}
+
+	err := magic.Map(user1, &user2, magic.WithConverters(timeToUnix))
+	fmt.Println(err)
+	fmt.Printf("%+v\n", user2)
+}
+```
+
+
+### Fields mapping
+```go
+package main
+
+import (
+	"fmt"
+	"time"
+
+	"github.com/onrik/magic"
+)
+
+type User1 struct {
+	ID       int
+	Name     string
+	Password string
+	Age      int
+	Created  time.Time
+}
+
+type User2 struct {
+	ID         int
+	Name       string
+	Registered time.Time
+}
+
+func main() {
+	user1 := User1{
+		ID:       1,
+		Name:     "John",
+		Password: "111",
+		Age:      21,
+		Created:  time.Now(),
+	}
+	user2 := User2{}
+
+	err := magic.Map(user1, &user2, magic.WithMapping(map[string]string{
+		"Created": "Registered",
+	}))
 	fmt.Println(err)
 	fmt.Printf("%+v\n", user2)
 }
