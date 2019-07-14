@@ -70,13 +70,11 @@ import (
 func timeToUnix(from, to reflect.Value) (bool, error) {
 	t, ok := from.Interface().(time.Time)
 	if !ok {
-		fmt.Println(from.Type())
 		return false, nil
 	}
 
 	_, ok = to.Interface().(int64)
 	if !ok {
-		fmt.Println(to.Type())
 		return false, nil
 	}
 
@@ -110,7 +108,8 @@ func main() {
 	user2 := User2{}
 
 	err := magic.Map(user1, &user2, magic.WithConverters(timeToUnix))
-	fmt.Println(err)
+	
+	.Println(err)
 	fmt.Printf("%+v\n", user2)
 }
 ```
