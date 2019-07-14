@@ -109,7 +109,7 @@ func main() {
 
 	err := magic.Map(user1, &user2, magic.WithConverters(timeToUnix))
 	
-	.Println(err)
+	fmt.Println(err)
 	fmt.Printf("%+v\n", user2)
 }
 ```
