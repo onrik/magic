@@ -1,6 +1,7 @@
 package magic
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 	"time"
@@ -8,6 +9,13 @@ import (
 
 func val(i interface{}) reflect.Value {
 	return reflect.ValueOf(i)
+}
+
+func assert(t *testing.T, i1, i2 interface{}) {
+	t.Helper()
+	if i1 != i2 {
+		t.Fatalf("%v != %v", i1, i2)
+	}
 }
 
 type testType1 struct {
@@ -44,12 +52,17 @@ type testType6 struct {
 	Created int64
 }
 
-type testType7 struct {
-	T *testType1
-}
+func timeToUnix(from, to reflect.Value) (bool, error) {
+	if to.Type() != reflect.TypeOf(int64(0)) {
+		return false, nil
+	}
+	t, ok := from.Interface().(time.Time)
+	if ok {
+		to.SetInt(t.Unix())
+		return true, nil
+	}
 
-type testType8 struct {
-	T *testType2
+	return false, nil
 }
 
 func TestMapStruct(t *testing.T) {
@@ -57,6 +70,12 @@ func TestMapStruct(t *testing.T) {
 	t2 := testType2{}
 
 	err := Map(t1, &t2)
+	assert(t, err, nil)
+	assert(t, t2.ID, t1.ID)
+	assert(t, t2.Name, t1.Name)
+
+	t2 = testType2{}
+	err = Map(&t1, &t2)
 	assert(t, err, nil)
 	assert(t, t2.ID, t1.ID)
 	assert(t, t2.Name, t1.Name)
@@ -130,19 +149,6 @@ func TestMapPointersSlice(t *testing.T) {
 	assert(t, t1[0].Tags[0], t2[0].Tags[0])
 }
 
-func timeToUnix(from, to reflect.Value) (bool, error) {
-	if to.Type() != reflect.TypeOf(int64(0)) {
-		return false, nil
-	}
-	t, ok := from.Interface().(time.Time)
-	if ok {
-		to.SetInt(t.Unix())
-		return true, nil
-	}
-
-	return false, nil
-}
-
 func TestInvalidType(t *testing.T) {
 	s1 := struct {
 		ID int
@@ -171,21 +177,37 @@ func TestInvalidSlice(t *testing.T) {
 
 func TestPtrToType(t *testing.T) {
 	i := 4385
+	type Foo1 struct {
+		Bar int
+	}
+	type Foo2 struct {
+		Bar int
+		S   float64
+	}
+
+	f := Foo1{56}
 	s1 := struct {
-		ID *int
-	}{&i}
+		ID  *int
+		Foo *Foo1
+	}{&i, &f}
 	s2 := struct {
-		ID int
+		ID  int
+		Foo Foo2
 	}{}
 
 	err := Map(s1, &s2)
 	assert(t, err, nil)
 	assert(t, *s1.ID, s2.ID)
+	assert(t, s1.Foo.Bar, s2.Foo.Bar)
 
 	s1.ID = nil
+	s1.Foo = nil
 	err = Map(s1, &s2)
 	assert(t, err, nil)
 	assert(t, s2.ID, i)
+	if s1.Foo != nil {
+		t.Fatal(s1.Foo)
+	}
 }
 
 func TestTypeToPtr(t *testing.T) {
@@ -201,6 +223,44 @@ func TestTypeToPtr(t *testing.T) {
 	assert(t, s1.ID, *s2.ID)
 }
 
+func TestConvertable(t *testing.T) {
+	type Maps map[string]string
+	type S1 struct {
+		V map[string]string
+	}
+	type S2 struct {
+		V Maps
+	}
+
+	s1 := S1{map[string]string{
+		"foo": "bar",
+	}}
+	s2 := S2{}
+
+	err := Map(s1, &s2)
+	assert(t, err, nil)
+	assert(t, len(s1.V), len(s2.V))
+	assert(t, s1.V["foo"], s2.V["foo"])
+}
+
+func TestMapError(t *testing.T) {
+	type S1 struct {
+		ID int
+	}
+	s1 := S1{45}
+	s2 := []string{}
+
+	err := Map(s1, s2)
+	if err == nil || err.Error() != "[]string is not addressable" {
+		t.Fatal(err)
+	}
+
+	err = Map(s1, &s2)
+	if err == nil || err.Error() != "Cannot map magic.S1 to *[]string" {
+		t.Fatal(err)
+	}
+}
+
 func TestConverter(t *testing.T) {
 	now := time.Now()
 	t5 := testType5{45, now}
@@ -210,6 +270,12 @@ func TestConverter(t *testing.T) {
 	assert(t, err, nil)
 	assert(t, t5.ID, t6.ID)
 	assert(t, t6.Created, now.Unix())
+
+	e := fmt.Errorf("E")
+	err = Map(t5, &t6, WithConverters(func(v1, v2 reflect.Value) (bool, error) {
+		return false, e
+	}))
+	assert(t, err.Error(), "Created: E")
 }
 
 func TestMapping(t *testing.T) {
@@ -225,10 +291,4 @@ func TestMapping(t *testing.T) {
 	}))
 	assert(t, err, nil)
 	assert(t, t1.ID, t2.UUID)
-}
-
-func assert(t *testing.T, i1, i2 interface{}) {
-	if i1 != i2 {
-		t.Fatalf("%v != %v", i1, i2)
-	}
 }

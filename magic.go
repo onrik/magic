@@ -14,10 +14,7 @@ func isPtrOf(v1, v2 reflect.Value) bool {
 		return false
 	}
 
-	return v1.Type().Elem() == v2.Type()
-}
-func isPtrOfStruct(v reflect.Value) bool {
-	return v.Type().Kind() == reflect.Ptr && v.Type().Elem().Kind() == reflect.Struct
+	return v1.Type().Elem().Kind() == v2.Type().Kind()
 }
 
 func convert(from, to reflect.Value, opts *options) error {
@@ -25,6 +22,12 @@ func convert(from, to reflect.Value, opts *options) error {
 	// Same types
 	if from.Type() == to.Type() {
 		to.Set(from)
+		return nil
+	}
+
+	// Convertable
+	if from.Type().Kind() == to.Type().Kind() && from.Type().ConvertibleTo(to.Type()) {
+		to.Set(from.Convert(to.Type()))
 		return nil
 	}
 
@@ -47,20 +50,6 @@ func convert(from, to reflect.Value, opts *options) error {
 	// Different structs
 	if from.Type().Kind() == reflect.Struct && to.Type().Kind() == reflect.Struct {
 		return convertStruct(from, to, opts)
-	}
-
-	if from.Type().Kind() == reflect.Struct && isPtrOfStruct(to) {
-		if to.IsNil() {
-			to.Set(reflect.New(to.Type().Elem()))
-		}
-		return convertStruct(from, to.Elem(), opts)
-	}
-
-	if to.Type().Kind() == reflect.Struct && isPtrOfStruct(from) {
-		if from.IsNil() {
-			from.Set(reflect.New(from.Type()).Elem())
-		}
-		return convertStruct(from.Elem(), to, opts)
 	}
 
 	// Slices
@@ -129,9 +118,18 @@ func Map(from, to interface{}, opts ...func(*options)) error {
 	typeTo := reflect.TypeOf(to)
 	// fmt.Println("Map", typeFrom, "(", valueFrom, ")", "->", typeTo, "(", valueTo, ")")
 
+	if typeFrom.Kind() == reflect.Ptr {
+		valueFrom = valueFrom.Elem()
+		typeFrom = typeFrom.Elem()
+	}
+
 	if typeTo.Kind() == reflect.Ptr {
 		valueTo = valueTo.Elem()
 		typeTo = typeTo.Elem()
+	}
+
+	if !valueTo.CanAddr() {
+		return fmt.Errorf("%T is not addressable", to)
 	}
 
 	o := options{}
