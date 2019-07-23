@@ -8,15 +8,6 @@ import (
 // Converter is a custom converter for differect types
 type Converter func(from, to reflect.Value) (bool, error)
 
-// isPtrOf checks that v1.Type is ptr of v2.Type
-func isPtrOf(v1, v2 reflect.Value) bool {
-	if v1.Type().Kind() != reflect.Ptr {
-		return false
-	}
-
-	return v1.Type().Elem().Kind() == v2.Type().Kind()
-}
-
 func convert(from, to reflect.Value, opts *options) error {
 	// fmt.Println("    convert", from.Type(), "(", from, ")", "->", to.Type(), "(", to, ")")
 	// Same types
@@ -25,26 +16,27 @@ func convert(from, to reflect.Value, opts *options) error {
 		return nil
 	}
 
-	// Convertable
+	// Convertible
 	if from.Type().Kind() == to.Type().Kind() && from.Type().ConvertibleTo(to.Type()) {
 		to.Set(from.Convert(to.Type()))
 		return nil
 	}
 
+	// Ptr to Type
+	if from.Type().Kind() == reflect.Ptr {
+		if from.IsNil() {
+			return nil
+		}
+
+		return convert(from.Elem(), to, opts)
+	}
+
 	// Type to Ptr
-	if isPtrOf(to, from) {
+	if to.Type().Kind() == reflect.Ptr {
 		if to.IsNil() {
 			to.Set(reflect.New(to.Type().Elem()))
 		}
 		return convert(from, to.Elem(), opts)
-	}
-
-	// Ptr to Type
-	if isPtrOf(from, to) {
-		if from.IsNil() {
-			return nil
-		}
-		return convert(from.Elem(), to, opts)
 	}
 
 	// Different structs
@@ -68,7 +60,7 @@ func convert(from, to reflect.Value, opts *options) error {
 		}
 	}
 
-	return fmt.Errorf("Cannot convert %v to %v", from.Type(), to.Type())
+	return fmt.Errorf("cannot convert %v to %v", from.Type(), to.Type())
 }
 
 func convertSlice(from, to reflect.Value, opts *options) error {

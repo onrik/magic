@@ -157,7 +157,7 @@ func TestInvalidType(t *testing.T) {
 		ID string
 	}{}
 	err := Map(s1, &s2)
-	if err == nil || err.Error() != "ID: Cannot convert int to string" {
+	if err == nil || err.Error() != "ID: cannot convert int to string" {
 		t.Fatal(err)
 	}
 }
@@ -170,7 +170,7 @@ func TestInvalidSlice(t *testing.T) {
 		Tags []string
 	}{}
 	err := Map(s1, &s2)
-	if err == nil || err.Error() != "Tags: Cannot convert int to string" {
+	if err == nil || err.Error() != "Tags: cannot convert int to string" {
 		t.Fatal(err)
 	}
 }
