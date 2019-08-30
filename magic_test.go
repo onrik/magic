@@ -18,6 +18,13 @@ func assert(t *testing.T, i1, i2 interface{}) {
 	}
 }
 
+func assertTrue(t *testing.T, b bool) {
+	t.Helper()
+	if !b {
+		t.Fatal(false)
+	}
+}
+
 type testType1 struct {
 	ID       int
 	Name     string
@@ -259,6 +266,153 @@ func TestMapError(t *testing.T) {
 	if err == nil || err.Error() != "Cannot map magic.S1 to *[]string" {
 		t.Fatal(err)
 	}
+}
+
+func TestConvertMap(t *testing.T) {
+	type G1 struct {
+		ID   int
+		Name string
+	}
+
+	type G2 struct {
+		ID int
+	}
+
+	type U1 struct {
+		Groups map[string]G1
+	}
+
+	type U2 struct {
+		Groups map[string]G2
+	}
+
+	u1 := U1{
+		Groups: map[string]G1{
+			"test": G1{43, "test"},
+		},
+	}
+	u2 := U2{}
+
+	err := Map(u1, &u2)
+	assert(t, err, nil)
+	assertTrue(t, len(u2.Groups) == 1)
+	assertTrue(t, u2.Groups["test"].ID == 43)
+}
+
+func TestConvertMapToPtr(t *testing.T) {
+	type G1 struct {
+		ID   int
+		Name string
+	}
+
+	type G2 struct {
+		ID int
+	}
+
+	type U1 struct {
+		Groups map[string]G1
+	}
+
+	type U2 struct {
+		Groups *map[string]G2
+	}
+
+	u1 := U1{
+		Groups: map[string]G1{
+			"test": G1{43, "test"},
+		},
+	}
+	u2 := U2{}
+
+	err := Map(u1, &u2)
+	assert(t, err, nil)
+	assertTrue(t, u2.Groups != nil)
+	assertTrue(t, len(*u2.Groups) == 1)
+	assertTrue(t, (*(u2.Groups))["test"].ID == 43)
+}
+
+func TestConvertPtrToMap(t *testing.T) {
+	type G1 struct {
+		ID   int
+		Name string
+	}
+
+	type G2 struct {
+		ID int
+	}
+
+	type U1 struct {
+		Groups *map[string]G1
+	}
+
+	type U2 struct {
+		Groups map[string]G2
+	}
+
+	u1 := U1{
+		Groups: &map[string]G1{
+			"test": G1{43, "test"},
+		},
+	}
+	u2 := U2{}
+
+	err := Map(u1, &u2)
+	assert(t, err, nil)
+	assertTrue(t, len(u2.Groups) == 1)
+	assertTrue(t, u2.Groups["test"].ID == 43)
+}
+
+func TestConvertInvalidMap(t *testing.T) {
+	type U1 struct {
+		Groups map[string]string
+	}
+
+	type U2 struct {
+		Groups map[string]int
+	}
+
+	u1 := U1{
+		Groups: map[string]string{
+			"foo": "bar",
+		},
+	}
+	u2 := U2{}
+
+	err := Map(u1, &u2)
+	assertTrue(t, err != nil)
+	assert(t, err.Error(), "Groups: cannot convert string to int")
+}
+
+func TestConvertPtrToPtr(t *testing.T) {
+	type G1 struct {
+		ID int
+	}
+
+	type G2 struct {
+		ID   int
+		Name string
+	}
+
+	type U1 struct {
+		ID    *int
+		Group *G1
+		G     *G1
+	}
+
+	type U2 struct {
+		ID    *int
+		Name  string
+		Group *G2
+		G     *G2
+	}
+
+	u1 := U1{Group: &G1{4}}
+	u2 := U2{}
+
+	err := Map(u1, &u2)
+	assertTrue(t, err == nil)
+	assertTrue(t, u2.Group != nil)
+	assertTrue(t, u2.Group.ID == 4)
 }
 
 func TestConverter(t *testing.T) {

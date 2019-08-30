@@ -71,6 +71,13 @@ func convert(from, to reflect.Value, opts *options) error {
 		return convertSlice(from, to, opts)
 	}
 
+	// Maps
+	if from.Type().Kind() == reflect.Map && to.Type().Kind() == reflect.Map {
+		if from.Type().Key() == to.Type().Key() {
+			return convertMap(from, to, opts)
+		}
+	}
+
 	// Use converters for different types
 	for _, c := range opts.converters {
 		ok, err := c(from, to)
@@ -95,6 +102,23 @@ func convertSlice(from, to reflect.Value, opts *options) error {
 		}
 
 		to.Set(reflect.Append(to, elem))
+	}
+
+	return nil
+}
+
+func convertMap(from, to reflect.Value, opts *options) error {
+	if to.IsNil() {
+		to.Set(reflect.MakeMap(to.Type()))
+	}
+
+	for _, k := range from.MapKeys() {
+		elem := reflect.New(to.Type().Elem()).Elem()
+		if err := convert(from.MapIndex(k), elem, opts); err != nil {
+			return err
+		}
+
+		to.SetMapIndex(k, elem)
 	}
 
 	return nil
