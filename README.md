@@ -1,5 +1,5 @@
 # magic
-![Tests](https://github.com/onrik/magic/workflows/Tests/badge.svg)
+[![Tests](https://github.com/onrik/magic/workflows/Tests/badge.svg)](https://github.com/onrik/magic/actions)
 [![Coverage Status](https://coveralls.io/repos/github/onrik/magic/badge.svg?branch=master)](https://coveralls.io/github/onrik/magic?branch=master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/onrik/magic)](https://goreportcard.com/report/github.com/onrik/magic)
 [![PkgGoDev](https://pkg.go.dev/badge/github.com/onrik/magic)](https://pkg.go.dev/github.com/onrik/magic)
