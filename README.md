@@ -10,6 +10,7 @@ By default:
 1. Map slices with same types 
 1. Map types to pointers and backwards (for example: int to *int) 
 1. Returns error on types mismatch
+1. Returns lint of unconverted fields
 
 By options:
 1. Custom converters for different types
@@ -23,7 +24,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/onrik/magic"
+	"github.com/onrik/magic/v2"
 )
 
 type User1 struct {
@@ -48,7 +49,7 @@ func main() {
 	}
 	user2 := User2{}
 
-	err := magic.Map(user1, &user2)
+	_, err := magic.Map(user1, &user2)
 	fmt.Println(err)
 	fmt.Printf("%+v\n", user2)
 }
@@ -64,7 +65,7 @@ import (
 
 	"time"
 
-	"github.com/onrik/magic"
+	"github.com/onrik/magic/v2"
 )
 
 func timeToUnix(from, to reflect.Value) (bool, error) {
@@ -107,8 +108,7 @@ func main() {
 	}
 	user2 := User2{}
 
-	err := magic.Map(user1, &user2, magic.WithConverters(timeToUnix))
-	
+	_, err := magic.Map(user1, &user2, magic.WithConverters(timeToUnix))
 	fmt.Println(err)
 	fmt.Printf("%+v\n", user2)
 }
@@ -123,7 +123,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/onrik/magic"
+	"github.com/onrik/magic/v2"
 )
 
 type User1 struct {
@@ -150,7 +150,7 @@ func main() {
 	}
 	user2 := User2{}
 
-	err := magic.Map(user1, &user2, magic.WithMapping(map[string]string{
+	_, err := magic.Map(user1, &user2, magic.WithMapping(map[string]string{
 		"Created": "Registered",
 	}))
 	fmt.Println(err)
