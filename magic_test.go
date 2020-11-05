@@ -157,27 +157,31 @@ func TestMapPointersSlice(t *testing.T) {
 }
 
 func TestInvalidType(t *testing.T) {
-	s1 := struct {
+	type S1 struct {
 		ID int
-	}{}
-	s2 := struct {
+	}
+	type S2 struct {
 		ID string
-	}{}
+	}
+	s1 := S1{}
+	s2 := S2{}
 	_, err := Map(s1, &s2)
-	if err == nil || err.Error() != "ID: cannot convert int to string" {
+	if err == nil || err.Error() != "S1.ID: cannot convert int to string" {
 		t.Fatal(err)
 	}
 }
 
 func TestInvalidSlice(t *testing.T) {
-	s1 := struct {
+	type S1 struct {
 		Tags []int
-	}{[]int{1}}
-	s2 := struct {
+	}
+	type S2 struct {
 		Tags []string
-	}{}
+	}
+	s1 := S1{[]int{1}}
+	s2 := S2{}
 	_, err := Map(s1, &s2)
-	if err == nil || err.Error() != "Tags: cannot convert int to string" {
+	if err == nil || err.Error() != "S1.Tags: cannot convert int to string" {
 		t.Fatal(err)
 	}
 }
@@ -380,7 +384,7 @@ func TestConvertInvalidMap(t *testing.T) {
 
 	_, err := Map(u1, &u2)
 	assertTrue(t, err != nil)
-	assert(t, err.Error(), "Groups: cannot convert string to int")
+	assert(t, err.Error(), "U1.Groups: cannot convert string to int")
 }
 
 func TestConvertPtrToPtr(t *testing.T) {
@@ -507,7 +511,7 @@ func TestConverter(t *testing.T) {
 	_, err = Map(t5, &t6, WithConverters(func(v1, v2 reflect.Value) (bool, error) {
 		return false, e
 	}))
-	assert(t, err.Error(), "Created: E")
+	assert(t, err.Error(), "testType5.Created: E")
 }
 
 func TestMapping(t *testing.T) {
