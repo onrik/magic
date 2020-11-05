@@ -76,13 +76,13 @@ func TestMapStruct(t *testing.T) {
 	t1 := testType1{34, "John", "111", []string{"1"}}
 	t2 := testType2{}
 
-	err := Map(t1, &t2)
+	_, err := Map(t1, &t2)
 	assert(t, err, nil)
 	assert(t, t2.ID, t1.ID)
 	assert(t, t2.Name, t1.Name)
 
 	t2 = testType2{}
-	err = Map(&t1, &t2)
+	_, err = Map(&t1, &t2)
 	assert(t, err, nil)
 	assert(t, t2.ID, t1.ID)
 	assert(t, t2.Name, t1.Name)
@@ -92,7 +92,7 @@ func TestMapStructWithPointers(t *testing.T) {
 	t1 := testType1{34, "John", "111", []string{"1"}}
 	t3 := testType3{}
 
-	err := Map(t1, &t3)
+	_, err := Map(t1, &t3)
 	assert(t, err, nil)
 	assert(t, *t3.ID, t1.ID)
 	assert(t, *t3.Name, t1.Name)
@@ -102,7 +102,7 @@ func TestMapStructWithPointers(t *testing.T) {
 	t3 = testType3{&id, &name}
 	t1 = testType1{}
 
-	err = Map(t1, &t3)
+	_, err = Map(t1, &t3)
 	assert(t, err, nil)
 	assert(t, *t3.ID, t1.ID)
 	assert(t, *t3.Name, t1.Name)
@@ -113,7 +113,7 @@ func TestMapStructWithPointersSlice(t *testing.T) {
 
 	t4 := testType4{}
 
-	err := Map(t1, &t4)
+	_, err := Map(t1, &t4)
 	assert(t, err, nil)
 	assert(t, t4.ID, t1.ID)
 	assert(t, *t4.Tags[0], t1.Tags[0])
@@ -124,7 +124,7 @@ func TestMapSlice(t *testing.T) {
 
 	t2 := []testType2{}
 
-	err := Map(t1, &t2)
+	_, err := Map(t1, &t2)
 	assert(t, err, nil)
 	assert(t, len(t2), 1)
 	assert(t, t2[0].ID, t1[0].ID)
@@ -136,7 +136,7 @@ func TestMapPointersSlice(t *testing.T) {
 	t1 := []testType1{{34, "John", "111", []string{"1"}}}
 	t2 := []*testType2{}
 
-	err := Map(t1, &t2)
+	_, err := Map(t1, &t2)
 	assert(t, err, nil)
 	assert(t, len(t2), 1)
 	assert(t, t2[0].ID, t1[0].ID)
@@ -147,7 +147,7 @@ func TestMapPointersSlice(t *testing.T) {
 		{43, "John", time.Now(), []string{"2"}},
 	}
 	t1 = []testType1{}
-	err = Map(t2, &t1)
+	_, err = Map(t2, &t1)
 	assert(t, err, nil)
 	assert(t, len(t1), 1)
 	assert(t, t1[0].ID, t2[0].ID)
@@ -163,7 +163,7 @@ func TestInvalidType(t *testing.T) {
 	s2 := struct {
 		ID string
 	}{}
-	err := Map(s1, &s2)
+	_, err := Map(s1, &s2)
 	if err == nil || err.Error() != "ID: cannot convert int to string" {
 		t.Fatal(err)
 	}
@@ -176,7 +176,7 @@ func TestInvalidSlice(t *testing.T) {
 	s2 := struct {
 		Tags []string
 	}{}
-	err := Map(s1, &s2)
+	_, err := Map(s1, &s2)
 	if err == nil || err.Error() != "Tags: cannot convert int to string" {
 		t.Fatal(err)
 	}
@@ -202,14 +202,14 @@ func TestPtrToType(t *testing.T) {
 		Foo Foo2
 	}{}
 
-	err := Map(s1, &s2)
+	_, err := Map(s1, &s2)
 	assert(t, err, nil)
 	assert(t, *s1.ID, s2.ID)
 	assert(t, s1.Foo.Bar, s2.Foo.Bar)
 
 	s1.ID = nil
 	s1.Foo = nil
-	err = Map(s1, &s2)
+	_, err = Map(s1, &s2)
 	assert(t, err, nil)
 	assert(t, s2.ID, i)
 	if s1.Foo != nil {
@@ -225,7 +225,7 @@ func TestTypeToPtr(t *testing.T) {
 		ID *int
 	}{}
 
-	err := Map(s1, &s2)
+	_, err := Map(s1, &s2)
 	assert(t, err, nil)
 	assert(t, s1.ID, *s2.ID)
 }
@@ -244,7 +244,7 @@ func TestConvertable(t *testing.T) {
 	}}
 	s2 := S2{}
 
-	err := Map(s1, &s2)
+	_, err := Map(s1, &s2)
 	assert(t, err, nil)
 	assert(t, len(s1.V), len(s2.V))
 	assert(t, s1.V["foo"], s2.V["foo"])
@@ -257,12 +257,12 @@ func TestMapError(t *testing.T) {
 	s1 := S1{45}
 	s2 := []string{}
 
-	err := Map(s1, s2)
+	_, err := Map(s1, s2)
 	if err == nil || err.Error() != "[]string is not addressable" {
 		t.Fatal(err)
 	}
 
-	err = Map(s1, &s2)
+	_, err = Map(s1, &s2)
 	if err == nil || err.Error() != "Cannot map magic.S1 to *[]string" {
 		t.Fatal(err)
 	}
@@ -293,7 +293,7 @@ func TestConvertMap(t *testing.T) {
 	}
 	u2 := U2{}
 
-	err := Map(u1, &u2)
+	_, err := Map(u1, &u2)
 	assert(t, err, nil)
 	assertTrue(t, len(u2.Groups) == 1)
 	assertTrue(t, u2.Groups["test"].ID == 43)
@@ -324,7 +324,7 @@ func TestConvertMapToPtr(t *testing.T) {
 	}
 	u2 := U2{}
 
-	err := Map(u1, &u2)
+	_, err := Map(u1, &u2)
 	assert(t, err, nil)
 	assertTrue(t, u2.Groups != nil)
 	assertTrue(t, len(*u2.Groups) == 1)
@@ -356,7 +356,7 @@ func TestConvertPtrToMap(t *testing.T) {
 	}
 	u2 := U2{}
 
-	err := Map(u1, &u2)
+	_, err := Map(u1, &u2)
 	assert(t, err, nil)
 	assertTrue(t, len(u2.Groups) == 1)
 	assertTrue(t, u2.Groups["test"].ID == 43)
@@ -378,7 +378,7 @@ func TestConvertInvalidMap(t *testing.T) {
 	}
 	u2 := U2{}
 
-	err := Map(u1, &u2)
+	_, err := Map(u1, &u2)
 	assertTrue(t, err != nil)
 	assert(t, err.Error(), "Groups: cannot convert string to int")
 }
@@ -409,10 +409,88 @@ func TestConvertPtrToPtr(t *testing.T) {
 	u1 := U1{Group: &G1{4}}
 	u2 := U2{}
 
-	err := Map(u1, &u2)
+	_, err := Map(u1, &u2)
 	assertTrue(t, err == nil)
 	assertTrue(t, u2.Group != nil)
 	assertTrue(t, u2.Group.ID == 4)
+}
+
+func TestSkipField(t *testing.T) {
+	type User struct {
+		ID   int
+		Name string
+	}
+
+	u1 := User{1, "John"}
+	u2 := User{}
+	_, err := Map(u1, &u2, WithMapping(map[string]string{
+		"ID": "",
+	}))
+	assertTrue(t, err == nil)
+	assertTrue(t, u2.ID == 0)
+	assertTrue(t, u2.Name == "John")
+}
+
+func TestFullNameMapping(t *testing.T) {
+	type Group1 struct {
+		ID string
+	}
+	type Group2 struct {
+		Name string
+	}
+	type User1 struct {
+		ID    int
+		Group Group1
+	}
+	type User2 struct {
+		ID    int
+		Group Group2
+	}
+
+	u1 := User1{1, Group1{"G1"}}
+	u2 := User2{}
+	_, err := Map(u1, &u2, WithMapping(map[string]string{
+		"Group1.ID": "Name",
+	}))
+	assertTrue(t, err == nil)
+	assertTrue(t, u2.ID == 1)
+	assertTrue(t, u2.Group.Name == "G1")
+
+	// Test skip
+	u2 = User2{}
+	_, err = Map(u1, &u2, WithMapping(map[string]string{
+		"Group1.ID": "",
+	}))
+	assertTrue(t, err == nil)
+	assertTrue(t, u2.ID == 1)
+	assertTrue(t, u2.Group.Name == "")
+}
+
+func TestUnconvertedFields(t *testing.T) {
+	type Group1 struct {
+		ID   int
+		Name string
+	}
+	type Group2 struct {
+		Name string
+	}
+	type User1 struct {
+		ID    int
+		Name  string
+		Group Group1
+	}
+	type User2 struct {
+		ID    int
+		Group Group2
+	}
+
+	u1 := User1{}
+	u2 := User2{}
+	unconv, err := Map(u1, &u2)
+	assertTrue(t, err == nil)
+	assertTrue(t, len(unconv) == 2)
+	assertTrue(t, unconv[0] == "User1.Name")
+	assertTrue(t, unconv[1] == "Group1.ID")
 }
 
 func TestConverter(t *testing.T) {
@@ -420,13 +498,13 @@ func TestConverter(t *testing.T) {
 	t5 := testType5{45, now}
 	t6 := testType6{}
 
-	err := Map(t5, &t6, WithConverters(timeToUnix))
+	_, err := Map(t5, &t6, WithConverters(timeToUnix))
 	assert(t, err, nil)
 	assert(t, t5.ID, t6.ID)
 	assert(t, t6.Created, now.Unix())
 
 	e := fmt.Errorf("E")
-	err = Map(t5, &t6, WithConverters(func(v1, v2 reflect.Value) (bool, error) {
+	_, err = Map(t5, &t6, WithConverters(func(v1, v2 reflect.Value) (bool, error) {
 		return false, e
 	}))
 	assert(t, err.Error(), "Created: E")
@@ -440,7 +518,7 @@ func TestMapping(t *testing.T) {
 		UUID string
 	}{}
 
-	err := Map(t1, &t2, WithMapping(map[string]string{
+	_, err := Map(t1, &t2, WithMapping(map[string]string{
 		"ID": "UUID",
 	}))
 	assert(t, err, nil)

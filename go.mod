@@ -1,3 +1,3 @@
-module github.com/onrik/magic
+module github.com/onrik/magic/v2
 
-go 1.12
+go 1.14
